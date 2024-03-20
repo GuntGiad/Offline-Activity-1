@@ -1,0 +1,116 @@
+---
+title: "MCBDD Module I offline activity"
+format: html
+editor: visual
+---
+
+## "A piece of code that visualizes the probability that Fred is indeed infected"
+
+First example how to solve first task:
+
+```{r}
+deasisePrevalence <- 0.05 #5% of the population is in fact infected
+specificity <- 0.995 #person is free of the disease, then the probability that the diagnostic test comes back negative
+
+sensitivity <- 0.995 # person has the disease, then the probability that the diagnostic blood test comes back positive
+
+healthyPrevalence <- 0.95 #1-DeasisePrevalence
+posTestifHelathy <- 0.005 #1-Specificity
+```
+
+Positive predictive value:
+
+The probability that Fred is infected given that the test is positive is the probability of having Covid and testing positive divided by the probability of testing positive.
+
+```{r}
+nominator <- sensitivity*deasisePrevalence
+denominator <- (sensitivity*deasisePrevalence) + posTestifHelathy*healthyPrevalence
+
+ProbFredInfected <- nominator/denominator
+ProbFredInfected #0.912844
+```
+
+TASK 2
+
+I really tried but at the end I had to use ChatGPT to resolve the question, every time I modified the code something went wrong so it's pretty close to the output I got.
+
+Let's define the independent variables and make a function to calculate the probability that Fred is infected given that the test is positive
+
+```{r}
+# Define sensitivity and specificities
+sensitivity <- 0.995
+specificities <- c(0.99, 0.999, 0.9999, 0.99999)
+
+# Define infection prevalence values
+infection_prevalence <- seq(0.001, 50, by = 0.1) / 100  # Convert to percentage
+
+# Function to calculate probability of infection given prevalence and specificity
+calculate_probability_of_infection <- function(prevalence, specificity) {
+  healthy_prevalence <- 1 - prevalence
+  pos_test_if_healthy <- 1 - specificity
+  nominator <- sensitivity * prevalence
+  denominator <- (sensitivity * prevalence) + (pos_test_if_healthy * healthy_prevalence)
+  return(nominator / denominator)
+}
+
+# Calculate probability of infection for each combination of prevalence and specificity
+results <- lapply(specificities, function(specificity) {
+  sapply(infection_prevalence, function(prevalence) {
+    calculate_probability_of_infection(prevalence, specificity)
+  })
+})
+
+```
+
+Visualize the results
+
+```{r}
+plot(infection_prevalence * 100, results[[1]], type = "l", col = "white", 
+     ylim = c(0, 1), xlab = "Infection Prevalence (%)", 
+     ylab = "Probability of Infection given Positive Test Result", 
+     main = "Probability of Infection vs. Infection Prevalence with Varying Specificity")
+colors <- c("cyan", "red", "green", "orange")  # Define colors for specificities
+for (i in 1:length(specificities)) {
+  lines(infection_prevalence * 100, results[[i]], col = colors[i])
+}
+legend("topright", legend = paste("Specificity:", specificities * 100, "%"), col = colors, lty = 1, cex = 0.8)
+grid()
+```
+
+Checking for myself
+
+```{r}
+deasisePrevalence <- 0.05#5% of the population is in fact infected
+specificity <- 0.99 #person is free of the disease, then the probability that the diagnostic test comes back negative
+
+sensitivity <- 0.99 # person has the disease, then the probability that the diagnostic blood test comes back positive
+
+healthyPrevalence <-1-deasisePrevalence
+posTestifHelathy <- 1- specificity
+
+nominator <- sensitivity*deasisePrevalence
+denominator <- (sensitivity*deasisePrevalence) + posTestifHelathy*healthyPrevalence
+
+ProbFredInfected <- nominator/denominator
+ProbFredInfected #0.912844
+```
+
+examples:
+
+deasisePrevalence \<- 0.001
+
+specificity \<- 0.99
+
+ProbFredInfected #0.09
+
+deasisePrevalence \<- 0.001
+
+specificity \<- 0.99999
+
+ProbFredInfected #0.99
+
+deasisePrevalence \<- 0.5
+
+specificity \<- 0.99
+
+ProbFredInfected #0.99
